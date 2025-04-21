@@ -24,14 +24,10 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
         {
             try
             {
-                var credentials = new
-                {
-                    client_id = _clientId,
-                    client_secret = _clientSecret
-                };
+                var request = new HttpRequestMessage(HttpMethod.Get, _authEndpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _clientSecret);
 
-                var content = new StringContent(JsonSerializer.Serialize(credentials), Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(_authEndpoint, content);
+                var response = await _httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
                 var responseStream = await response.Content.ReadAsStreamAsync();
