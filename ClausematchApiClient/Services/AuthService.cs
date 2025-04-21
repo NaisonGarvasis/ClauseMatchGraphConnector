@@ -12,7 +12,6 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
     {
         private readonly HttpClient _httpClient;
         private readonly string _authEndpoint = "https://api.clausematch.com/auth/token";
-        private readonly string _clientId = "your-client-id";
         private readonly string _clientSecret = "your-client-secret";
 
         public AuthService(IHttpClientFactory httpClientFactory)
