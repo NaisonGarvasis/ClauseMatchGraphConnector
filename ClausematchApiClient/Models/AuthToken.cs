@@ -5,7 +5,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Models
 {
     public class AuthToken
     {
-        [JsonPropertyName("access_token")]
+        [JsonPropertyName("accessToken")]
         public required string AccessToken { get; set; }
     }
 }

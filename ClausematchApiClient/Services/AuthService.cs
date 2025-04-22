@@ -23,7 +23,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, _authEndpoint);
+                var request = new HttpRequestMessage(HttpMethod.Post, _authEndpoint);
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _clientSecret);
 
                 var response = await _httpClient.SendAsync(request);

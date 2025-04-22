@@ -24,7 +24,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
             try
             {
                 var categories = new List<Category>();
-                int page = 1, size = 15;
+                int page = 1, size = 50;
 
                 while (true)
                 {
@@ -49,6 +49,40 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
                 }
 
                 return categories;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error fetching categories: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<List<Document>> GetAllDocumentsByCategoryAsync(string jwtToken, string categoryId)
+        {
+            try
+            {
+                var documents = new List<Document>();
+                int page = 1, size = 50;
+
+                while (true)
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{_endpoint}?page_number={page}&page_size={size}");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+
+                    var response = await _httpClient.SendAsync(request);
+                    response.EnsureSuccessStatusCode();
+
+                    var stream = await response.Content.ReadAsStreamAsync();
+                    var data = await JsonSerializer.DeserializeAsync<DocumentSearchResponse>(stream);
+
+                    if (data?.Documents == null || data.Documents.Count == 0)
+                        break;
+                    documents.AddRange(data.Documents);
+                    if (data.CurrentPage >= data.TotalPages)
+                        break;
+
+                    page++;
+                }
+                return documents;
             }
             catch (Exception ex)
             {

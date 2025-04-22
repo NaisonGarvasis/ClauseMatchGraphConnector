@@ -6,10 +6,10 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Models
 {
     public class CategoryResponse
     {
-        [JsonPropertyName("current_page")]
+        [JsonPropertyName("currentPage")]
         public int CurrentPage { get; set; }
 
-        [JsonPropertyName("total_pages")]
+        [JsonPropertyName("totalPages")]
         public int TotalPages { get; set; }
 
         [JsonPropertyName("categories")]

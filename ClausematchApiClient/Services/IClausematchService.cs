@@ -10,5 +10,6 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
     public interface IClausematchService
     {
         Task<List<Category>> GetAllCategoriesAsync(string jwtToken);
+        Task<List<Document>> GetAllDocumentsByCategoryAsync(string jwtToken, string categoryId);
     }
 }
