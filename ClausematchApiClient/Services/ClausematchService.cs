@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 using ClauseMatchGraphConnector.ClausematchApiClient.Models;
+using ClauseMatchGraphConnector.Data;
 
 namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
 {
@@ -56,11 +57,11 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
             }
         }
 
-        public async Task<List<Document>> GetAllDocumentsByCategoryAsync(string jwtToken, string categoryId)
+        public async Task<List<ClausematchDocument>> GetAllDocumentsByCategoryAsync(string jwtToken, string categoryId)
         {
             try
             {
-                var documents = new List<Document>();
+                var documents = new List<ClausematchDocument>();
                 int page = 1, size = 50;
 
                 while (true)

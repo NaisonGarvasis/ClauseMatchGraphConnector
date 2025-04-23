@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ClauseMatchGraphConnector.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,23 +20,32 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Models
         public int ResultsCount { get; set; }
 
         [JsonPropertyName("content")]
-        public List<Document>? Documents { get; set; }
+        public List<ClausematchDocument>? Documents { get; set; }
     }
-    public class Document
-    {
-        [JsonPropertyName("id")]
-        public required string Id { get; set; }
+    //public class ClausematchDocument
+    //{
+    //    [JsonPropertyName("id")]
+    //    public required string Id { get; set; }
 
-        [JsonPropertyName("documentClass")]
-        public required string DocumentClass { get; set; }
+    //    [JsonPropertyName("documentClass")]
+    //    public required string DocumentClass { get; set; }
 
-        [JsonPropertyName("latestVersion")]
-        public required string LatestVersion { get; set; }
+    //    [JsonPropertyName("latestVersion")]
+    //    public required string LatestVersion { get; set; }
 
-        [JsonPropertyName("latestTitle")]
-        public required string LatestTitle { get; set; }
+    //    [JsonPropertyName("latestTitle")]
+    //    public required string LatestTitle { get; set; }
 
-        [JsonPropertyName("type")]
-        public required string Type { get; set; }
-    }
+    //    [JsonPropertyName("type")]
+    //    public required string Type { get; set; }
+
+    //    [JsonPropertyName("lastModifiedAt")]
+    //    public required string LastModifiedAt { get; set; }
+
+    //    [JsonPropertyName("lastPublishedAt")]
+    //    public required string LastPublishedAt { get; set; }
+
+    //    [JsonPropertyName("lastReleasedAt")]
+    //    public required string LastReleasedAt { get; set; }
+    //}
 }

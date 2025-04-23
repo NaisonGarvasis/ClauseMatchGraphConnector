@@ -1,4 +1,5 @@
 ﻿using ClauseMatchGraphConnector.ClausematchApiClient.Models;
+using ClauseMatchGraphConnector.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,6 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
     public interface IClausematchService
     {
         Task<List<Category>> GetAllCategoriesAsync(string jwtToken);
-        Task<List<Document>> GetAllDocumentsByCategoryAsync(string jwtToken, string categoryId);
+        Task<List<ClausematchDocument>> GetAllDocumentsByCategoryAsync(string jwtToken, string categoryId);
     }
 }
