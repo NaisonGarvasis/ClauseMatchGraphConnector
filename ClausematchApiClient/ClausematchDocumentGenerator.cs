@@ -18,7 +18,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient
             {
                 documents.Add(new ClausematchDocument
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    DocumentId = Guid.NewGuid().ToString(),
                     DocumentClass = $"Class-{i}",
                     LatestVersion = $"v{1}.{i}",
                     LatestTitle = $"Sample Document Title {i}",

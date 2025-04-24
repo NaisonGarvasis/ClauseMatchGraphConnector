@@ -12,7 +12,7 @@ public class ClausematchDocument
 
     [Key]
     [JsonPropertyName("id")]
-    public required string Id { get; set; }
+    public required string DocumentId { get; set; }
     [JsonPropertyName("latestTitle")]
     public required string LatestTitle { get; set; }
     [JsonPropertyName("latestVersion")]
@@ -27,7 +27,7 @@ public class ClausematchDocument
 
     public Properties AsExternalItemProperties()
     {
-        _ = Id ?? throw new MemberAccessException("Id cannot be null");
+        _ = DocumentId ?? throw new MemberAccessException("Id cannot be null");
         _ = LatestTitle ?? throw new MemberAccessException("Title cannot be null");
        // _ = Categories ?? throw new MemberAccessException("Categories cannot be null");
 
@@ -35,13 +35,13 @@ public class ClausematchDocument
         {
             AdditionalData = new Dictionary<string, object>
             {
-                { "id", Id },
+                { "id", DocumentId },
                 { "latestTitle", LatestTitle },
                 { "latestVersion", LatestVersion },
                 { "documentClass", DocumentClass },
                 { "type", Type },
                 { "lastPublishedAt", LastPublishedAt },
-                { "categories@odata.type", "Collection(String)" }
+               // { "categories@odata.type", "Collection(String)" }
               //  { "categories", Categories }
             }
         };

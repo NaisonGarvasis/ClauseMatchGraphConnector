@@ -1,3 +1,4 @@
+using Azure;
 using Azure.Identity;
 using Microsoft.Graph;
 using Microsoft.Graph.Models.ExternalConnectors;
@@ -74,8 +75,9 @@ public static async Task RegisterSchemaAsync(string? connectionId, Schema schema
     // Send the request
     var responseMessage = await httpClient.SendAsync(requestMessage) ??
         throw new Exception("No response returned from API");
-
-    if (responseMessage.IsSuccessStatusCode)
+        //var content =  await responseMessage.Content.ReadAsStringAsync();
+        //Console.WriteLine(content);
+        if (responseMessage.IsSuccessStatusCode)
     {
         // The operation ID is contained in the Location header returned
         // in the response
@@ -133,6 +135,7 @@ public static async Task AddOrUpdateItemAsync(string? connectionId, ExternalItem
         .Connections[connectionId]
         .Items[item.Id]
         .PutAsync(item);
+
 }
 public static async Task DeleteItemAsync(string? connectionId, string? itemId)
 {
