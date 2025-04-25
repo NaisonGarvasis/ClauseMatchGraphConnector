@@ -7,12 +7,17 @@ public class Settings
     public string? ClientId { get; set; }
     public string? ClientSecret { get; set; }
     public string? TenantId { get; set; }
+    public string? ClausematchDocumentUrl { get; set; }
+    public string? ClausematchAuthKey { get; set; }
+    public string? ClausematchAuthEndpoint { get; set; }
+
+
 
     public static Settings LoadSettings()
     {
-        // Load settings
-        IConfiguration config = new ConfigurationBuilder()
-            .AddUserSecrets<Program>()
+        var config = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory()) 
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .Build();
 
         return config.GetRequiredSection("Settings").Get<Settings>() ??

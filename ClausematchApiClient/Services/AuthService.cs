@@ -11,20 +11,17 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
     public class AuthService : IAuthService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _authEndpoint = "https://api.clausematch.com/auth/token";
-        private readonly string _clientSecret = "your-client-secret";
-
         public AuthService(IHttpClientFactory httpClientFactory)
         {
             _httpClient = httpClientFactory.CreateClient();
         }
 
-        public async Task<string> GetJwtTokenAsync()
+        public async Task<string> GetJwtTokenAsync(Settings settings)
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, _authEndpoint);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _clientSecret);
+                var request = new HttpRequestMessage(HttpMethod.Post, settings.ClausematchAuthEndpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.ClausematchAuthKey);
 
                 var response = await _httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();

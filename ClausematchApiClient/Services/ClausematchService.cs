@@ -57,7 +57,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
             }
         }
 
-        public async Task<List<ClausematchDocument>> GetAllDocumentsByCategoryAsync(string jwtToken, string categoryId)
+        public async Task<List<ClausematchDocument>> GetAllDocumentsByCategoryAsync(string jwtToken, string categoryId, Settings settings)
         {
             try
             {
@@ -78,6 +78,12 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
                     if (data?.Documents == null || data.Documents.Count == 0)
                         break;
                     documents.AddRange(data.Documents);
+                    foreach (var doc in documents)
+                    {
+                        doc.Categories = string.Join(", ", doc.LatestCategories.Select(c => c.CategoryName));
+                        doc.DocumentUrl = settings.ClausematchDocumentUrl + doc.DocumentId;
+                    }
+
                     if (data.CurrentPage >= data.TotalPages)
                         break;
 

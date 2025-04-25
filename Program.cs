@@ -7,6 +7,12 @@ using ClauseMatchGraphConnector;
 using ClauseMatchGraphConnector.Data;
 using ClauseMatchGraphConnector.Graph;
 using Microsoft.Graph.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.Reflection.Metadata;
+using ClauseMatchGraphConnector.ClausematchApiClient;
+using ClauseMatchGraphConnector.ClausematchApiClient.Models;
+using ClauseMatchGraphConnector.ClausematchApiClient.Services;
 
 Console.WriteLine("Clausematch documents Search Connector\n");
 
@@ -31,6 +37,7 @@ while (choice != 0)
     Console.WriteLine("5. View schema for current connection");
     Console.WriteLine("6. Push updated items to current connection");
     Console.WriteLine("7. Push ALL items to current connection");
+    Console.WriteLine("8. Verify Clausematch API Connectivity");
     Console.Write("Selection: ");
 
     try
@@ -70,6 +77,9 @@ while (choice != 0)
             break;
         case 7:
             await UpdateItemsFromDatabaseAsync(false, settings.TenantId);
+            break;
+        case 8:
+            await GetClauseMatchDocumentsAsync(settings);
             break;
         default:
             Console.WriteLine("Invalid choice! Please try again.");
@@ -246,8 +256,10 @@ async Task RegisterSchemaAsync()
                 new Property { Name = "latestTitle", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false, Labels = new List<Label?>() { Label.Title }},
                 new Property { Name = "latestVersion", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
                 new Property { Name = "documentClass", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
-                new Property { Name = "type", Type = PropertyType.String, IsQueryable = true, IsSearchable = false, IsRetrievable = true, IsRefinable = false },
-                new Property { Name = "lastPublishedAt", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false }
+                new Property { Name = "type", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
+                new Property { Name = "categories", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
+                new Property { Name = "lastPublishedAt", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
+                new Property { Name = "documentUrl", Type = PropertyType.String, IsQueryable = true, IsSearchable = false, IsRetrievable = true, IsRefinable = false }
             },
         };
 
@@ -390,4 +402,40 @@ async Task UpdateItemsFromDatabaseAsync(bool uploadModifiedOnly, string? tenantI
     {
         SaveLastUploadTime(newUploadTime);
     }
+  }
+
+static async Task<IList<ClausematchDocument>> GetClauseMatchDocumentsAsync( Settings settings)
+{
+    var host = Host.CreateDefaultBuilder()
+               .ConfigureServices((context, services) =>
+               {
+                   // Register IHttpClientFactory
+                   services.AddHttpClient();
+                   services.AddTransient<IAuthService, AuthService>();
+                   services.AddTransient<IClausematchService, ClausematchService>();
+               })
+               .Build();
+    IList<ClausematchDocument> documents = new List<ClausematchDocument>();
+    var authService = host.Services.GetRequiredService<IAuthService>();
+    var clausematchService = host.Services.GetRequiredService<IClausematchService>();
+    try
+    {
+        var token = await authService.GetJwtTokenAsync(settings);
+        var categories = await clausematchService.GetAllCategoriesAsync(token);
+        foreach (var category in categories)
+        {
+            Console.WriteLine($"Category ID: {category.Id}, Name: {category.Name}");
+            documents = await clausematchService.GetAllDocumentsByCategoryAsync(token, category.Id, settings);
+            foreach (var document in documents)
+            {
+                Console.WriteLine($"Document ID: {document.DocumentId}, Latest Title: {document.LatestTitle}, Latest Version: {document.LatestVersion}");
+            }
+            break;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error: {ex.Message}");
+    }
+    return documents;
 }

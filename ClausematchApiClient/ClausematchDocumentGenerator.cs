@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 
 namespace ClauseMatchGraphConnector.ClausematchApiClient
 {
@@ -24,6 +25,8 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient
                     LatestTitle = $"Sample Document Title {i}",
                     Type = (i % 2 == 0) ? "Policy" : "Procedure",
                     LastPublishedAt = DateTime.UtcNow.AddDays(-i - 2).ToString("o"),
+                    Categories = (i % 2 == 0) ? "Cat1, Cat2" : "Cat3, Cat4",
+                    DocumentUrl = "https://learn.microsoft.com/en-us/" + Guid.NewGuid().ToString()
                 });
             }
 

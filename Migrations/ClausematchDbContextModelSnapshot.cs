@@ -17,16 +17,47 @@ namespace ClauseMatchGraphConnector.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.4");
 
+            modelBuilder.Entity("ClauseMatchGraphConnector.ClausematchApiClient.Models.LatestCategory", b =>
+                {
+                    b.Property<string>("CategoryId")
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Relational:JsonPropertyName", "CategoryId");
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Relational:JsonPropertyName", "CategoryName");
+
+                    b.Property<string>("ClausematchDocumentDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CategoryId");
+
+                    b.HasIndex("ClausematchDocumentDocumentId");
+
+                    b.ToTable("LatestCategory");
+
+                    b.HasAnnotation("Relational:JsonPropertyName", "latestCategories");
+                });
+
             modelBuilder.Entity("ClauseMatchGraphConnector.Data.ClausematchDocument", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("DocumentId")
                         .HasColumnType("TEXT")
                         .HasAnnotation("Relational:JsonPropertyName", "id");
+
+                    b.Property<string>("Categories")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DocumentClass")
                         .IsRequired()
                         .HasColumnType("TEXT")
                         .HasAnnotation("Relational:JsonPropertyName", "documentClass");
+
+                    b.Property<string>("DocumentUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -58,9 +89,21 @@ namespace ClauseMatchGraphConnector.Migrations
                         .HasColumnType("TEXT")
                         .HasAnnotation("Relational:JsonPropertyName", "type");
 
-                    b.HasKey("Id");
+                    b.HasKey("DocumentId");
 
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("ClauseMatchGraphConnector.ClausematchApiClient.Models.LatestCategory", b =>
+                {
+                    b.HasOne("ClauseMatchGraphConnector.Data.ClausematchDocument", null)
+                        .WithMany("LatestCategories")
+                        .HasForeignKey("ClausematchDocumentDocumentId");
+                });
+
+            modelBuilder.Entity("ClauseMatchGraphConnector.Data.ClausematchDocument", b =>
+                {
+                    b.Navigation("LatestCategories");
                 });
 #pragma warning restore 612, 618
         }

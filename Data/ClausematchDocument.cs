@@ -1,6 +1,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using ClauseMatchGraphConnector.ClausematchApiClient.Models;
 using Microsoft.Graph.Models.ExternalConnectors;
 
 namespace ClauseMatchGraphConnector.Data;
@@ -24,6 +25,11 @@ public class ClausematchDocument
     //public required List<string> Categories { get; set; }
     [JsonPropertyName("lastPublishedAt")]
     public required string LastPublishedAt { get; set; }
+    [JsonPropertyName("latestCategories")]
+    public IList<LatestCategory> LatestCategories { get; set; }
+    public string Categories { get; set; }
+    public string DocumentUrl { get; set; }
+
 
     public Properties AsExternalItemProperties()
     {
@@ -42,7 +48,8 @@ public class ClausematchDocument
                 { "type", Type },
                 { "lastPublishedAt", LastPublishedAt },
                // { "categories@odata.type", "Collection(String)" }
-              //  { "categories", Categories }
+                { "categories", Categories },
+                { "documentUrl", DocumentUrl }
             }
         };
 

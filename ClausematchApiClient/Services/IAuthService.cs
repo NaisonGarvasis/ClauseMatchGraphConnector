@@ -8,6 +8,6 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
 {
     public interface IAuthService
     {
-        Task<string> GetJwtTokenAsync();
+        Task<string> GetJwtTokenAsync(Settings settings);
     }
 }

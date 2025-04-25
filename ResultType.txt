@@ -1,0 +1,59 @@
+﻿{
+    "type": "AdaptiveCard",
+    "version": "1.3",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": "auto",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "url": "https://res.cdn.office.net/midgard/versionless/defaultmrticon.png",
+                            "altText": "Thumbnail image",
+                            "horizontalAlignment": "center",
+                            "size": "small"
+                        }
+                    ],
+                    "horizontalAlignment": "center"
+                },
+                {
+                    "type": "Column",
+                    "width": "stretch",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "[${latestTitle}](${documentUrl})",
+                            "weight": "bolder",
+                            "color": "accent",
+                            "size": "medium",
+                            "maxLines": 3
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "[${documentUrl}](${documentUrl})",
+                            "weight": "bolder",
+                            "spacing": "small",
+                            "maxLines": 3
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "${categories}",
+                            "maxLines": 3,
+                            "wrap": true
+                        }
+                    ],
+                    "spacing": "medium"
+                }
+            ]
+        }
+    ],
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "$data": {
+        "categories": "categories",
+        "documentUrl": "https://contoso.com",
+        "latestTitle": "Sample Document"
+    }
+}
