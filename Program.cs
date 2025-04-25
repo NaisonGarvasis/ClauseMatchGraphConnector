@@ -13,9 +13,10 @@ using System.Reflection.Metadata;
 using ClauseMatchGraphConnector.ClausematchApiClient;
 using ClauseMatchGraphConnector.ClausematchApiClient.Models;
 using ClauseMatchGraphConnector.ClausematchApiClient.Services;
+using System.Collections.Generic;
+using System.Xml.Linq;
 
 Console.WriteLine("Clausematch documents Search Connector\n");
-
 
 var settings = Settings.LoadSettings();
 
@@ -79,7 +80,7 @@ while (choice != 0)
             await UpdateItemsFromDatabaseAsync(false, settings.TenantId);
             break;
         case 8:
-            await GetClauseMatchDocumentsAsync(settings);
+            await ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings);
             break;
         default:
             Console.WriteLine("Invalid choice! Please try again.");
@@ -90,7 +91,6 @@ while (choice != 0)
 static string? PromptForInput(string prompt, bool valueRequired)
 {
     string? response;
-
     do
     {
         Console.WriteLine($"{prompt}:");
@@ -155,14 +155,10 @@ async Task<ExternalConnection?> CreateConnectionAsync()
         return null;
     }
 }
-{
-    // TODO
-    throw new NotImplementedException();
-}
+
 
 async Task<ExternalConnection?> SelectExistingConnectionAsync()
 {
-    // TODO
     Console.WriteLine("Getting existing connections...");
     try
     {
@@ -404,38 +400,4 @@ async Task UpdateItemsFromDatabaseAsync(bool uploadModifiedOnly, string? tenantI
     }
   }
 
-static async Task<IList<ClausematchDocument>> GetClauseMatchDocumentsAsync( Settings settings)
-{
-    var host = Host.CreateDefaultBuilder()
-               .ConfigureServices((context, services) =>
-               {
-                   // Register IHttpClientFactory
-                   services.AddHttpClient();
-                   services.AddTransient<IAuthService, AuthService>();
-                   services.AddTransient<IClausematchService, ClausematchService>();
-               })
-               .Build();
-    IList<ClausematchDocument> documents = new List<ClausematchDocument>();
-    var authService = host.Services.GetRequiredService<IAuthService>();
-    var clausematchService = host.Services.GetRequiredService<IClausematchService>();
-    try
-    {
-        var token = await authService.GetJwtTokenAsync(settings);
-        var categories = await clausematchService.GetAllCategoriesAsync(token);
-        foreach (var category in categories)
-        {
-            Console.WriteLine($"Category ID: {category.Id}, Name: {category.Name}");
-            documents = await clausematchService.GetAllDocumentsByCategoryAsync(token, category.Id, settings);
-            foreach (var document in documents)
-            {
-                Console.WriteLine($"Document ID: {document.DocumentId}, Latest Title: {document.LatestTitle}, Latest Version: {document.LatestVersion}");
-            }
-            break;
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.Error.WriteLine($"Error: {ex.Message}");
-    }
-    return documents;
-}
+ 

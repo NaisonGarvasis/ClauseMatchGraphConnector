@@ -8,16 +8,15 @@ namespace ClauseMatchGraphConnector.Data;
 
 public class ClausematchDbContext : DbContext
 {
-    public DbSet<ClausematchDocument> Documents => Set<ClausematchDocument>();
+        public DbSet<ClausematchDocument> Documents => Set<ClausematchDocument>();
 
     public void EnsureDatabase()
     {
+        var settings = Settings.LoadSettings();
         if (Database.EnsureCreated() || !Documents.Any())
         {
-            // File was just created (or is empty),
-            // seed with data from CSV file
-            var documents = ClausematchDocumentGenerator.GenerateDocuments(50);
-            //var parts = CsvDataLoader.LoadPartsFromCsv("ApplianceParts.csv");
+            // var documents = ClausematchDocumentGenerator.GenerateDocuments(50);
+            var documents = ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings).Result;
             Documents.AddRange(documents);
             SaveChanges();
         }

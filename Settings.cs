@@ -10,7 +10,7 @@ public class Settings
     public string? ClausematchDocumentUrl { get; set; }
     public string? ClausematchAuthKey { get; set; }
     public string? ClausematchAuthEndpoint { get; set; }
-
+    public string? ClausematchApiBaseUrl { get; set; }
 
 
     public static Settings LoadSettings()

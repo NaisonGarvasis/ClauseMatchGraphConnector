@@ -13,14 +13,12 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
     public class ClausematchService : IClausematchService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _endpoint = "https://api.clausematch.com/api/v1/categories";
-
         public ClausematchService(IHttpClientFactory httpClientFactory)
         {
             _httpClient = httpClientFactory.CreateClient();
         }
 
-        public async Task<List<Category>> GetAllCategoriesAsync(string jwtToken)
+        public async Task<List<Category>> GetAllCategoriesAsync(string jwtToken,  Settings settings)
         {
             try
             {
@@ -29,7 +27,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
 
                 while (true)
                 {
-                    var request = new HttpRequestMessage(HttpMethod.Get, $"{_endpoint}?page_number={page}&page_size={size}");
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{settings.ClausematchApiBaseUrl}/categories?pageNumber={page}&pageSize={size}");
                     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
 
                     var response = await _httpClient.SendAsync(request);
@@ -66,7 +64,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
 
                 while (true)
                 {
-                    var request = new HttpRequestMessage(HttpMethod.Get, $"{_endpoint}?page_number={page}&page_size={size}");
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{settings.ClausematchApiBaseUrl}/documents/search?categoryId={categoryId}&pageNumber={page}&pageSize={size}");
                     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
 
                     var response = await _httpClient.SendAsync(request);

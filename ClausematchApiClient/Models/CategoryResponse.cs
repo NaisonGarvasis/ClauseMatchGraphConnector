@@ -12,7 +12,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Models
         [JsonPropertyName("totalPages")]
         public int TotalPages { get; set; }
 
-        [JsonPropertyName("categories")]
+        [JsonPropertyName("content")]
         public List<Category>? Categories { get; set; }
     }
 

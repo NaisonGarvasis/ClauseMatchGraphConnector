@@ -11,10 +11,10 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Models
     public class LatestCategory
     {
         [Key]
-        [JsonPropertyName("CategoryId")]
+        [JsonPropertyName("categoryId")]
         public required string CategoryId { get; set; }
 
-        [JsonPropertyName("CategoryName")]
+        [JsonPropertyName("categoryName")]
         public required string CategoryName { get; set; }
 
     }
