@@ -20,7 +20,7 @@ namespace ClauseMatchGraphConnector.Migrations
                     LatestVersion = table.Column<string>(type: "TEXT", nullable: false),
                     DocumentClass = table.Column<string>(type: "TEXT", nullable: false),
                     Type = table.Column<string>(type: "TEXT", nullable: false),
-                    LastPublishedAt = table.Column<string>(type: "TEXT", nullable: false),
+                    LastPublishedAt = table.Column<string>(type: "TEXT", nullable: true),
                     Categories = table.Column<string>(type: "TEXT", nullable: false),
                     DocumentUrl = table.Column<string>(type: "TEXT", nullable: false),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: false),
