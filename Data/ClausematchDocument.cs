@@ -16,16 +16,16 @@ public class ClausematchDocument
     public required string DocumentId { get; set; }
     [JsonPropertyName("latestTitle")]
     public required string LatestTitle { get; set; }
-    [JsonPropertyName("latestVersion")]
+    [JsonPropertyName("latestVersion"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public required string LatestVersion { get; set; }
-    [JsonPropertyName("documentClass")]
+    [JsonPropertyName("documentClass"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public required string DocumentClass { get; set; }
-    [JsonPropertyName("type")]
+    [JsonPropertyName("type"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public required string Type { get; set; }
     //public required List<string> Categories { get; set; }
-    [JsonPropertyName("lastPublishedAt")]
+    [JsonPropertyName("lastPublishedAt"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public required string LastPublishedAt { get; set; }
-    [JsonPropertyName("latestCategories")]
+    [JsonPropertyName("latestCategories"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IList<LatestCategory> LatestCategories { get; set; }
     public string Categories { get; set; }
     public string DocumentUrl { get; set; }

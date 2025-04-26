@@ -250,12 +250,12 @@ async Task RegisterSchemaAsync()
             {
                 //new Property { Name = "documentId", Type = PropertyType.String, IsQueryable = true, IsSearchable = false, IsRetrievable = true, IsRefinable = true },
                 new Property { Name = "latestTitle", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false, Labels = new List<Label?>() { Label.Title }},
-                new Property { Name = "latestVersion", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
+                new Property { Name = "latestVersion", Type = PropertyType.String, IsQueryable = true, IsSearchable = false, IsRetrievable = true, IsRefinable = false },
                 new Property { Name = "documentClass", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
                 new Property { Name = "type", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
                 new Property { Name = "categories", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
-                new Property { Name = "lastPublishedAt", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
-                new Property { Name = "documentUrl", Type = PropertyType.String, IsQueryable = true, IsSearchable = false, IsRetrievable = true, IsRefinable = false }
+                new Property { Name = "lastPublishedAt", Type = PropertyType.String, IsQueryable = false, IsSearchable = false, IsRetrievable = false, IsRefinable = false },
+                new Property { Name = "documentUrl", Type = PropertyType.String, IsQueryable = false, IsSearchable = false, IsRetrievable = true, IsRefinable = false }
             },
         };
 
