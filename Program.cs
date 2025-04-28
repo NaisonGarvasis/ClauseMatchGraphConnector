@@ -80,7 +80,9 @@ while (choice != 0)
             await UpdateItemsFromDatabaseAsync(false, settings.TenantId);
             break;
         case 8:
-            await ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings);
+           var documents =  await ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings);
+            string jsonString = JsonSerializer.Serialize(documents, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(jsonString);
             break;
         default:
             Console.WriteLine("Invalid choice! Please try again.");
