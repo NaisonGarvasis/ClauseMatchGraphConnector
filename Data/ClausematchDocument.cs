@@ -30,7 +30,7 @@ public class ClausematchDocument
     [JsonPropertyName("latestCategories"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IList<LatestCategory>? LatestCategories { get; set; }
     public string? Categories { get; set; }
-    public required string DocumentUrl { get; set; }
+    public string? DocumentUrl { get; set; }
 
 
     public Properties AsExternalItemProperties()
