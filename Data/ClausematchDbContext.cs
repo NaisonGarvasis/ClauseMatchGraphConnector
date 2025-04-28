@@ -37,6 +37,8 @@ public class ClausematchDbContext : DbContext
         ////        v => JsonSerializer.Serialize(v, JsonSerializerOptions.Default),
         ////        v => JsonSerializer.Deserialize<List<string>>(v, JsonSerializerOptions.Default)
         ////    );
+        modelBuilder.Entity<ClausematchDocument>()
+            .Ignore(d => d.LatestCategories);
 
         // Add LastUpdated and IsDeleted shadow properties
         modelBuilder.Entity<ClausematchDocument>()

@@ -1,5 +1,6 @@
 
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using ClauseMatchGraphConnector.ClausematchApiClient.Models;
 using Microsoft.Graph.Models.ExternalConnectors;
@@ -23,12 +24,13 @@ public class ClausematchDocument
     [JsonPropertyName("type"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public required string Type { get; set; }
     //public required List<string> Categories { get; set; }
-    [JsonPropertyName("lastPublishedAt"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public required string LastPublishedAt { get; set; }
+    [JsonPropertyName("lastModifiedAt"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LastPublishedAt { get; set; }
+    [NotMapped]
     [JsonPropertyName("latestCategories"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public IList<LatestCategory> LatestCategories { get; set; }
-    public string Categories { get; set; }
-    public string DocumentUrl { get; set; }
+    public IList<LatestCategory>? LatestCategories { get; set; }
+    public string? Categories { get; set; }
+    public required string DocumentUrl { get; set; }
 
 
     public Properties AsExternalItemProperties()
