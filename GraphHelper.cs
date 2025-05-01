@@ -52,7 +52,7 @@ public static async Task DeleteConnectionAsync(string? connectionId)
 
     await graphClient.External.Connections[connectionId].DeleteAsync();
 }
-public static async Task RegisterSchemaAsync(string? connectionId, Schema schema)
+public static async Task RegisterSchemaAsync(string? connectionId, Schema schema, bool isUpdate = false)
 {
     _ = graphClient ?? throw new MemberAccessException("graphClient is null");
     _ = httpClient ?? throw new MemberAccessException("httpClient is null");
@@ -69,8 +69,15 @@ public static async Task RegisterSchemaAsync(string? connectionId, Schema schema
     var requestMessage = await graphClient.RequestAdapter
         .ConvertToNativeRequestAsync<HttpRequestMessage>(requestInfo);
     _ = requestMessage ?? throw new Exception("Could not create native HTTP request");
-    requestMessage.Method = HttpMethod.Post;
-    requestMessage.Headers.Add("Prefer", "respond-async");
+        if (isUpdate)
+        {
+            requestMessage.Method = HttpMethod.Patch;
+        }
+        else
+        {
+            requestMessage.Method = HttpMethod.Post;
+        }
+        requestMessage.Headers.Add("Prefer", "respond-async");
 
     // Send the request
     var responseMessage = await httpClient.SendAsync(requestMessage) ??

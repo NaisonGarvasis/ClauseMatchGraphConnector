@@ -35,10 +35,11 @@ while (choice != 0)
     Console.WriteLine("2. Select an existing connection");
     Console.WriteLine("3. Delete current connection");
     Console.WriteLine("4. Register schema for current connection");
-    Console.WriteLine("5. View schema for current connection");
-    Console.WriteLine("6. Push updated items to current connection");
-    Console.WriteLine("7. Push ALL items to current connection");
-    Console.WriteLine("8. Verify Clausematch API Connectivity");
+    Console.WriteLine("5. Update schema for current connection");
+    Console.WriteLine("6. View schema for current connection");
+    Console.WriteLine("7. Push updated items to current connection");
+    Console.WriteLine("8. Push ALL items to current connection");
+    Console.WriteLine("9. Verify Clausematch API Connectivity");
     Console.Write("Selection: ");
 
     try
@@ -68,18 +69,21 @@ while (choice != 0)
             currentConnection = null;
             break;
         case 4:
-            await RegisterSchemaAsync();
+            await RegisterSchemaAsync(false);
             break;
         case 5:
-            await GetSchemaAsync();
+            await RegisterSchemaAsync(true);
             break;
         case 6:
-            await UpdateItemsFromDatabaseAsync(true, settings.TenantId);
+            await GetSchemaAsync();
             break;
         case 7:
-            await UpdateItemsFromDatabaseAsync(false, settings.TenantId);
+            await UpdateItemsFromDatabaseAsync(true, settings.TenantId);
             break;
         case 8:
+            await UpdateItemsFromDatabaseAsync(false, settings.TenantId);
+            break;
+        case 9:
            var documents =  await ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings);
             string jsonString = JsonSerializer.Serialize(documents, new JsonSerializerOptions { WriteIndented = true });
             Console.WriteLine(jsonString);
@@ -232,7 +236,7 @@ async Task DeleteCurrentConnectionAsync(ExternalConnection? connection)
     }
 }
 
-async Task RegisterSchemaAsync()
+async Task RegisterSchemaAsync(bool isUpdate = false)
 {
     if (currentConnection == null)
     {
@@ -257,12 +261,20 @@ async Task RegisterSchemaAsync()
                 new Property { Name = "type", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
                 new Property { Name = "categories", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
                 new Property { Name = "lastPublishedAt", Type = PropertyType.String, IsQueryable = false, IsSearchable = false, IsRetrievable = false, IsRefinable = false },
-                new Property { Name = "documentUrl", Type = PropertyType.String, IsQueryable = false, IsSearchable = false, IsRetrievable = true, IsRefinable = false }
+                new Property { Name = "documentUrl", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false }
             },
         };
 
-        await GraphHelper.RegisterSchemaAsync(currentConnection.Id, schema);
-        Console.WriteLine("Schema registered successfully");
+        if (isUpdate)
+        {
+            await GraphHelper.RegisterSchemaAsync(currentConnection.Id, schema, true);
+            Console.WriteLine("Schema registered successfully");
+        }
+        else 
+        {
+            await GraphHelper.RegisterSchemaAsync(currentConnection.Id, schema, false);
+            Console.WriteLine("Schema registered successfully");
+        }
     }
     catch (ServiceException serviceException)
     {
