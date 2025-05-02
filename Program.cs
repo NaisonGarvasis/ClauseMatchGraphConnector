@@ -1,117 +1,126 @@
-﻿using System.Text.Json;
+﻿using ClauseMatchGraphConnector;
+using ClauseMatchGraphConnector.ClausematchApiClient;
+using ClauseMatchGraphConnector.Data;
+using ClauseMatchGraphConnector.Graph;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Graph;
 using Microsoft.Graph.Models.ExternalConnectors;
 using Microsoft.Graph.Models.ODataErrors;
-using ClauseMatchGraphConnector;
-using ClauseMatchGraphConnector.Data;
-using ClauseMatchGraphConnector.Graph;
-using Microsoft.Graph.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using System.Reflection.Metadata;
-using ClauseMatchGraphConnector.ClausematchApiClient;
-using ClauseMatchGraphConnector.ClausematchApiClient.Models;
-using ClauseMatchGraphConnector.ClausematchApiClient.Services;
-using System.Collections.Generic;
-using System.Xml.Linq;
+using System.Text.Json;
+using Serilog;
 
-Console.WriteLine("Clausematch documents Search Connector\n");
-
-var settings = Settings.LoadSettings();
-
-// Initialize Graph
-InitializeGraph(settings);
-
+// Initialize Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.File("logs/app-log.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 ExternalConnection? currentConnection = null;
-if (settings.IsAdminUser == "true")
+
+try
 {
-    int choice = -1;
-    while (choice != 0)
+    Console.WriteLine("Clausematch documents Search Connector\n");
+    Log.Information("Application started");
+    var settings = Settings.LoadSettings();
+
+    // Initialize Graph
+    InitializeGraph(settings);
+
+    if (settings.IsAdminUser == "true")
     {
-        Console.WriteLine($"Current connection: {(currentConnection == null ? "NONE" : currentConnection.Name)}\n");
-        Console.WriteLine("Please choose one of the following options:");
-        Console.WriteLine("0. Exit");
-        Console.WriteLine("1. Create a connection");
-        Console.WriteLine("2. Select an existing connection");
-        Console.WriteLine("3. Delete current connection");
-        Console.WriteLine("4. Register schema for current connection");
-        Console.WriteLine("5. Update schema for current connection");
-        Console.WriteLine("6. View schema for current connection");
-        Console.WriteLine("7. Push updated items to current connection");
-        Console.WriteLine("8. Push ALL items to current connection");
-        Console.WriteLine("9. Verify Clausematch API Connectivity");
-        Console.Write("Selection: ");
+        int choice = -1;
+        while (choice != 0)
+        {
+            Console.WriteLine($"Current connection: {(currentConnection == null ? "NONE" : currentConnection.Name)}\n");
+            Console.WriteLine("Please choose one of the following options:");
+            Console.WriteLine("0. Exit");
+            Console.WriteLine("1. Create a connection");
+            Console.WriteLine("2. Select an existing connection");
+            Console.WriteLine("3. Delete current connection");
+            Console.WriteLine("4. Register schema for current connection");
+            Console.WriteLine("5. Update schema for current connection");
+            Console.WriteLine("6. View schema for current connection");
+            Console.WriteLine("7. Push updated items to current connection");
+            Console.WriteLine("8. Push ALL items to current connection");
+            Console.WriteLine("9. Verify Clausematch API Connectivity");
+            Console.Write("Selection: ");
 
-        try
-        {
-            choice = int.Parse(Console.ReadLine() ?? string.Empty);
-        }
-        catch (FormatException)
-        {
-            // Set to invalid value
-            choice = -1;
-        }
+            try
+            {
+                choice = int.Parse(Console.ReadLine() ?? string.Empty);
+            }
+            catch (FormatException)
+            {
+                choice = -1;
+            }
 
-        switch (choice)
-        {
-            case 0:
-                // Exit the program
-                Console.WriteLine("Goodbye...");
-                break;
-            case 1:
-                currentConnection = await CreateConnectionAsync();
-                break;
-            case 2:
-                currentConnection = await SelectExistingConnectionAsync();
-                break;
-            case 3:
-                await DeleteCurrentConnectionAsync(currentConnection);
-                currentConnection = null;
-                break;
-            case 4:
-                await RegisterSchemaAsync(false);
-                break;
-            case 5:
-                await RegisterSchemaAsync(true);
-                break;
-            case 6:
-                await GetSchemaAsync();
-                break;
-            case 7:
-                await UpdateItemsFromDatabaseAsync(true, settings.TenantId);
-                break;
-            case 8:
-                await UpdateItemsFromDatabaseAsync(false, settings.TenantId);
-                break;
-            case 9:
-                var documents = await ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings);
-                string jsonString = JsonSerializer.Serialize(documents, new JsonSerializerOptions { WriteIndented = true });
-                Console.WriteLine(jsonString);
-                break;
-            default:
-                Console.WriteLine("Invalid choice! Please try again.");
-                break;
+            switch (choice)
+            {
+                case 0:
+                    // Exit the program
+                    Console.WriteLine("Goodbye...");
+                    Log.Information("Application exiting");
+                    break;
+                case 1:
+                    currentConnection = await CreateConnectionAsync();
+                    break;
+                case 2:
+                    currentConnection = await SelectExistingConnectionAsync();
+                    break;
+                case 3:
+                    await DeleteCurrentConnectionAsync(currentConnection);
+                    currentConnection = null;
+                    break;
+                case 4:
+                    await RegisterSchemaAsync(false);
+                    break;
+                case 5:
+                    await RegisterSchemaAsync(true);
+                    break;
+                case 6:
+                    await GetSchemaAsync();
+                    break;
+                case 7:
+                    await UpdateItemsFromDatabaseAsync(true, settings.TenantId);
+                    break;
+                case 8:
+                    await UpdateItemsFromDatabaseAsync(false, settings.TenantId);
+                    break;
+                case 9:
+                    var documents = await ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings);
+                    string jsonString = JsonSerializer.Serialize(documents, new JsonSerializerOptions { WriteIndented = true });
+                    Console.WriteLine(jsonString);
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice! Please try again.");
+                    break;
+            }
         }
     }
-}
-else
-{
-    Console.WriteLine("Current connection");
-    Console.WriteLine("Pushing items to current connection...");
-
-    var connections = await GraphHelper.GetExistingConnectionsAsync();
-    currentConnection = connections?.Value?.FirstOrDefault(c => c.Id == settings.DefaultClausematchGraphConnectionId);
-
-    if (currentConnection == null)
+    else
     {
-        Console.WriteLine($"No connection found with ID: {settings.DefaultClausematchGraphConnectionId}");
-        return;
+        Console.WriteLine("Pushing items to current connection...");
+        Log.Information("Pushing items to current connection...");
+        var connections = await GraphHelper.GetExistingConnectionsAsync();
+        currentConnection = connections?.Value?.FirstOrDefault(c => c.Id == settings.DefaultClausematchGraphConnectionId);
+
+        if (currentConnection == null)
+        {
+            Console.WriteLine($"No connection found with ID: {settings.DefaultClausematchGraphConnectionId}");
+            return;
+        }
+        await UpdateItemsFromDatabaseAsync(false, settings.TenantId);
     }
-
-    await UpdateItemsFromDatabaseAsync(false, settings.TenantId);
 }
-
+catch (Exception ex)
+{
+    Console.WriteLine($"Unhandled exception: {ex}");
+    Log.Error(ex, "Unhandled exception occurred");
+}
+finally
+{
+    Log.Information("Application shutting down");
+    Log.CloseAndFlush();
+}
 
 
 static string? PromptForInput(string prompt, bool valueRequired)
