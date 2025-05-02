@@ -11,8 +11,9 @@ public class Settings
     public string? ClausematchAuthKey { get; set; }
     public string? ClausematchAuthEndpoint { get; set; }
     public string? ClausematchApiBaseUrl { get; set; }
-
-
+    public string? IsAdminUser { get; set; }
+    public string? DefaultClausematchGraphConnectionId { get; set; }
+    
     public static Settings LoadSettings()
     {
         var config = new ConfigurationBuilder()
