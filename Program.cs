@@ -404,11 +404,11 @@ async Task UpdateItemsFromDatabaseAsync(bool uploadModifiedOnly, string? tenantI
             Properties = document.AsExternalItemProperties(),
         };
         newItem.Properties.AdditionalData.Remove("id");
-        var json = JsonSerializer.Serialize(newItem);
-        Console.WriteLine(json);
+        //var json = JsonSerializer.Serialize(newItem);
+        //Console.WriteLine(json);
         try
         {
-            Console.Write($"Uploading document number {document.DocumentId}...");
+            Console.Write($"Uploading document: {document.LatestTitle} ({document.DocumentId})...");
             await GraphHelper.AddOrUpdateItemAsync(currentConnection.Id, newItem);
             Console.WriteLine("DONE");
         }

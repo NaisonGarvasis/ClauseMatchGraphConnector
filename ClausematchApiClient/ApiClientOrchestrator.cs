@@ -12,7 +12,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient
 {
     public static class ApiClientOrchestrator
     {
-       public async static Task<IList<ClausematchDocument>> GetClauseMatchDocumentsAsync(Settings settings)
+        public async static Task<IList<ClausematchDocument>> GetClauseMatchDocumentsAsync(Settings settings)
         {
             var host = Host.CreateDefaultBuilder()
                        .ConfigureServices((context, services) =>
@@ -35,16 +35,24 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient
                 Console.WriteLine("Invoking Categories Endpoint...");
                 var categories = await clausematchService.GetAllCategoriesAsync(token, settings);
                 Console.WriteLine("Total Categories" + categories.Count);
-                foreach (var category in categories)
+
+                // Normalize case for comparison
+                var configuredCategories = settings.Categories
+                    .Select(c => c.Trim().ToLowerInvariant())
+                    .ToHashSet();
+                var filteredCategories = categories
+                    .Where(c => configuredCategories.Contains(c.Name.Trim().ToLowerInvariant()))
+                    .ToList();
+                Console.WriteLine("Filtered Categories: " + filteredCategories.Count);
+                foreach (var category in filteredCategories)
                 {
-                    Console.WriteLine($"Category ID: {category.Id}, Name: {category.Name}");
-                    Console.WriteLine("Invoking Document Search...");
+                    Console.WriteLine($"Processing Category: {category.Name} (ID: {category.Id})");
                     var documentesForCategory = await clausematchService.GetAllDocumentsByCategoryAsync(token, category.Id, settings);
                     documents.AddRange(documentesForCategory);
                 }
-                Console.WriteLine("Total Documents " + documents.Count);
+                Console.WriteLine("Total Documents Fetched: " + documents.Count);
                 distinctDocumentsList = documents.DistinctBy(x => x.DocumentId).ToList();
-                Console.WriteLine("Total Documents " + distinctDocumentsList.Count);
+                Console.WriteLine("Total Distinct Documents: " + distinctDocumentsList.Count);
             }
             catch (Exception ex)
             {

@@ -13,7 +13,9 @@ public class Settings
     public string? ClausematchApiBaseUrl { get; set; }
     public string? IsAdminUser { get; set; }
     public string? DefaultClausematchGraphConnectionId { get; set; }
-    
+    public List<string> Categories { get; set; } = new();
+
+
     public static Settings LoadSettings()
     {
         var config = new ConfigurationBuilder()
