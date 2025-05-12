@@ -42,7 +42,7 @@ try
             Console.WriteLine("7. Push updated items to current connection");
             Console.WriteLine("8. Push ALL items to current connection");
             Console.WriteLine("9. Verify Clausematch API Connectivity");
-            Console.WriteLine("10. Mark ALL documents as deleted in local DB");
+            Console.WriteLine("10. Delete all items in current connection");
             Console.Write("Selection: ");
 
             try
@@ -95,8 +95,9 @@ try
                     using (var db = new ClausematchDbContext())
                     {
                         db.MarkAllDocumentsAsDeleted();
-                        Console.WriteLine("All documents marked as deleted.");
+                        Console.WriteLine("All documents marked as deleted in local DB.");
                     }
+                    await DeleteAllDeletedItemsFromDatabaseAsync(settings.TenantId);
                     break;
 
                 default:
@@ -452,4 +453,52 @@ async Task UpdateItemsFromDatabaseAsync(bool uploadModifiedOnly, string? tenantI
     }
   }
 
- 
+async Task DeleteAllDeletedItemsFromDatabaseAsync(string? tenantId)
+{
+    if (currentConnection == null)
+    {
+        Console.WriteLine("No connection selected. Please create a new connection or select an existing connection.");
+        return;
+    }
+
+    _ = tenantId ?? throw new ArgumentException("tenantId is null");
+
+    using var documentsDb = new ClausematchDbContext();
+    documentsDb.EnsureDatabase();
+
+    var documentsToDelete = documentsDb.Documents
+        .IgnoreQueryFilters()
+        .Where(p => EF.Property<bool>(p, "IsDeleted"))
+        .ToList();
+
+    Console.WriteLine($"Found {documentsToDelete.Count} documents to delete from Graph.");
+
+    var success = true;
+
+    foreach (var document in documentsToDelete)
+    {
+        try
+        {
+            Console.Write($"Deleting document {document.DocumentId} from Graph...");
+            await GraphHelper.DeleteItemAsync(currentConnection.Id, document.DocumentId.ToString());
+            Console.WriteLine("DONE");
+        }
+        catch (ODataError odataError)
+        {
+            success = false;
+            Console.WriteLine("FAILED");
+            Console.WriteLine($"Error: {odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
+        }
+    }
+
+    if (success)
+    {
+        Console.WriteLine("All marked-deleted documents successfully removed from Graph.");
+    }
+    else
+    {
+        Console.WriteLine("Some deletions failed. Review logs for details.");
+    }
+}
+
+
