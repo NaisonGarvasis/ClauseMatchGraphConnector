@@ -42,6 +42,7 @@ try
             Console.WriteLine("7. Push updated items to current connection");
             Console.WriteLine("8. Push ALL items to current connection");
             Console.WriteLine("9. Verify Clausematch API Connectivity");
+            Console.WriteLine("10. Mark ALL documents as deleted in local DB");
             Console.Write("Selection: ");
 
             try
@@ -90,6 +91,14 @@ try
                     string jsonString = JsonSerializer.Serialize(documents, new JsonSerializerOptions { WriteIndented = true });
                     Console.WriteLine(jsonString);
                     break;
+                case 10:
+                    using (var db = new ClausematchDbContext())
+                    {
+                        db.MarkAllDocumentsAsDeleted();
+                        Console.WriteLine("All documents marked as deleted.");
+                    }
+                    break;
+
                 default:
                     Console.WriteLine("Invalid choice! Please try again.");
                     break;

@@ -13,14 +13,35 @@ public class ClausematchDbContext : DbContext
     public void EnsureDatabase()
     {
         var settings = Settings.LoadSettings();
-        if (Database.EnsureCreated() || !Documents.Any())
+        if (Database.EnsureCreated() || !Documents.IgnoreQueryFilters().Any())
         {
-            // var documents = ClausematchDocumentGenerator.GenerateDocuments(50);
             var documents = ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings).Result;
-            Documents.AddRange(documents);
+
+            foreach (var incomingDoc in documents)
+            {
+                var existing = Documents
+                    .IgnoreQueryFilters()
+                    .FirstOrDefault(d => d.DocumentId == incomingDoc.DocumentId);
+
+                if (existing != null)
+                {
+                    // Update existing record
+                    Entry(existing).CurrentValues.SetValues(incomingDoc);
+
+                    // If it was soft-deleted, un-delete it
+                    Entry(existing).Property("IsDeleted").CurrentValue = false;
+                    Entry(existing).Property("LastUpdated").CurrentValue = DateTime.UtcNow;
+                }
+                else
+                {
+                    Documents.Add(incomingDoc);
+                }
+            }
+
             SaveChanges();
         }
     }
+
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
@@ -83,4 +104,18 @@ public class ClausematchDbContext : DbContext
 
         entry.State = EntityState.Detached;
     }
+
+    public void MarkAllDocumentsAsDeleted()
+    {
+        var allDocuments = Documents.IgnoreQueryFilters().ToList();
+
+        foreach (var document in allDocuments)
+        {
+            Entry(document).Property("IsDeleted").CurrentValue = true;
+            Entry(document).Property("LastUpdated").CurrentValue = DateTime.UtcNow;
+        }
+
+        SaveChanges();
+    }
+
 }
