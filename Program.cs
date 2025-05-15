@@ -197,10 +197,11 @@ async Task<ExternalConnection?> CreateConnectionAsync()
     catch (ODataError odataError)
     {
         Console.WriteLine($"Error creating connection: {odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
-        return null;
+        Log.Error(odataError, odataError.Message);
+        Log.Error(odataError, odataError.ToString());
+        throw new Exception($"Failed:{odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
     }
 }
-
 
 async Task<ExternalConnection?> SelectExistingConnectionAsync()
 {
@@ -251,7 +252,9 @@ async Task<ExternalConnection?> SelectExistingConnectionAsync()
     catch (ODataError odataError)
     {
         Console.WriteLine($"Error getting connections: {odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
-        return null;
+        Log.Error(odataError, odataError.Message);
+        Log.Error(odataError, odataError.ToString());
+        throw new Exception($"Failed to retrieve token:{odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
     }
 }
 
@@ -272,6 +275,9 @@ async Task DeleteCurrentConnectionAsync(ExternalConnection? connection)
     catch (ODataError odataError)
     {
         Console.WriteLine($"Error deleting connection: {odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
+        Log.Error(odataError, odataError.Message);
+        Log.Error(odataError, odataError.ToString());
+        throw new Exception($"Failed:{odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
     }
 }
 
@@ -319,10 +325,16 @@ async Task RegisterSchemaAsync(bool isUpdate = false)
     catch (ServiceException serviceException)
     {
         Console.WriteLine($"Error registering schema: {serviceException.ResponseStatusCode} {serviceException.Message}");
+        Log.Error(serviceException, serviceException.Message);
+        Log.Error(serviceException, serviceException.ToString());
+        throw new Exception($"Failed to retrieve token:{serviceException.ResponseStatusCode}: {serviceException.Message}");
     }
     catch (ODataError odataError)
     {
         Console.WriteLine($"Error registering schema: {odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
+        Log.Error(odataError, odataError.Message);
+        Log.Error(odataError, odataError.ToString());
+        throw new Exception($"Failed to retrieve token:{odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
     }
 }
 
@@ -343,6 +355,9 @@ async Task GetSchemaAsync()
     catch (ODataError odataError)
     {
         Console.WriteLine($"Error getting schema: {odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
+        Log.Error(odataError, odataError.Message);
+        Log.Error(odataError, odataError.ToString());
+        throw new Exception($"Failed to retrieve token:{odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
     }
 }
 
@@ -428,6 +443,9 @@ async Task UpdateItemsFromDatabaseAsync(bool uploadModifiedOnly, string? tenantI
             success = false;
             Console.WriteLine("FAILED");
             Console.WriteLine($"Error: {odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
+            Log.Error(odataError, odataError.Message);
+            Log.Error(odataError, odataError.ToString());
+           // throw new Exception($"Failed to retrieve token:{odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
         }
     }
 
@@ -444,6 +462,9 @@ async Task UpdateItemsFromDatabaseAsync(bool uploadModifiedOnly, string? tenantI
             success = false;
             Console.WriteLine("FAILED");
             Console.WriteLine($"Error: {odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
+            Log.Error(odataError, odataError.Message);
+            Log.Error(odataError, odataError.ToString());
+           // throw new Exception($"Failed to retrieve token:{odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
         }
     }
 
