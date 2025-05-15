@@ -1,6 +1,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
 using System.Text.Json.Serialization;
 using ClauseMatchGraphConnector.ClausematchApiClient.Models;
 using Microsoft.Graph.Models.ExternalConnectors;
@@ -31,14 +32,32 @@ public class ClausematchDocument
     public IList<LatestCategory>? LatestCategories { get; set; }
     public string? Categories { get; set; }
     public string? DocumentUrl { get; set; }
-
+    [NotMapped]
+    public string? HeaderContent { get; set; }
+    [NotMapped]
+    public string? FooterContent { get; set; }
+    [NotMapped]
+    public string? BodyContent { get; set; }
+    [NotMapped]
+    public string? FullContentHtml
+    {
+        get
+        {
+            var sb = new StringBuilder();
+            if (!string.IsNullOrWhiteSpace(HeaderContent)) sb.AppendLine($"<header>{HeaderContent}</header>");
+            if (!string.IsNullOrWhiteSpace(BodyContent)) sb.AppendLine($"<main>{BodyContent}</main>");
+            if (!string.IsNullOrWhiteSpace(FooterContent)) sb.AppendLine($"<footer>{FooterContent}</footer>");
+            return sb.ToString();
+        }
+    }
 
     public Properties AsExternalItemProperties()
     {
         _ = DocumentId ?? throw new MemberAccessException("Id cannot be null");
         _ = LatestTitle ?? throw new MemberAccessException("Title cannot be null");
-       // _ = Categories ?? throw new MemberAccessException("Categories cannot be null");
+        // _ = Categories ?? throw new MemberAccessException("Categories cannot be null");
 
+#pragma warning disable CS8604 // Possible null reference argument.
         var properties = new Properties
         {
             AdditionalData = new Dictionary<string, object>
@@ -51,9 +70,11 @@ public class ClausematchDocument
                 { "lastPublishedAt", LastPublishedAt },
                // { "categories@odata.type", "Collection(String)" }
                 { "categories", Categories },
-                { "documentUrl", DocumentUrl }
+                { "documentUrl", DocumentUrl },
+                { "content", FullContentHtml },
             }
         };
+#pragma warning restore CS8604 // Possible null reference argument.
 
         return properties;
     }

@@ -57,6 +57,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error: {ex.Message}");
+                throw new Exception($"Error fetching document info: {ex.Message}", ex);
             }
             return distinctDocumentsList;
         }

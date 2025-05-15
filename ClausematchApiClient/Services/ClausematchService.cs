@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -18,7 +20,7 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
             _httpClient = httpClientFactory.CreateClient();
         }
 
-        public async Task<List<Category>> GetAllCategoriesAsync(string jwtToken,  Settings settings)
+        public async Task<List<Category>> GetAllCategoriesAsync(string jwtToken, Settings settings)
         {
             try
             {
@@ -80,6 +82,14 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
                     {
                         doc.Categories = string.Join(", ", doc.LatestCategories.Select(c => c.CategoryName));
                         doc.DocumentUrl = settings.ClausematchDocumentUrl + doc.DocumentId;
+
+                        DocumentContent content = await GetDocumentContentByIdAsync(jwtToken, doc.DocumentId, doc.LatestVersion, settings);
+
+                        doc.HeaderContent = content?.Header?.Content;
+                        doc.FooterContent = content?.Footer?.Content;
+                        doc.BodyContent = content?.Body != null
+                            ? string.Join("\n", content.Body.Select(b => b.Content))
+                            : string.Empty;
                     }
 
                     if (data.CurrentPage >= data.TotalPages)
@@ -92,6 +102,33 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
             catch (Exception ex)
             {
                 throw new Exception($"Error fetching categories: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<DocumentContent> GetDocumentContentByIdAsync(string jwtToken, string documentId, string version, Settings settings)
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{settings.ClausematchApiBaseUrl}/documents/{documentId}/versions/{version}/paragraphs");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                var response = await _httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"[ERROR] Failed to get content for document '{documentId}' version '{version}': {response.StatusCode}");
+                }
+                var json = await response.Content.ReadAsStreamAsync();
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var content = JsonSerializer.Deserialize<DocumentContent>(json, options);
+                return content ?? new DocumentContent();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"[EXCEPTION] Error retrieving document content for '{documentId}': {ex.Message}");
             }
         }
     }
