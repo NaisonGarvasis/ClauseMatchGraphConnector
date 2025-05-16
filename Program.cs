@@ -299,18 +299,16 @@ async Task RegisterSchemaAsync(bool isUpdate = false)
             BaseType = "microsoft.graph.externalItem",
             Properties = new List<Property>
             {
-                //new Property { Name = "documentId", Type = PropertyType.String, IsQueryable = true, IsSearchable = false, IsRetrievable = true, IsRefinable = true },
                 new Property { Name = "latestTitle", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false, Labels = new List<Label?>() { Label.Title }},
                 new Property { Name = "latestVersion", Type = PropertyType.String, IsQueryable = true, IsSearchable = false, IsRetrievable = true, IsRefinable = false },
                 new Property { Name = "documentClass", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
                 new Property { Name = "type", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },
-                new Property { Name = "categories", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false, Aliases = new List<string> { "categories", "category" }   ,Labels = new List<Label?>() { Label.Authors } },
+                new Property { Name = "categories", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false },// Aliases = new List<string> { "categories", "category" }   ,Labels = new List<Label?>() { Label.Authors } },
                 new Property { Name = "lastPublishedAt", Type = PropertyType.String, IsQueryable = false, IsSearchable = false, IsRetrievable = false, IsRefinable = false },
                 new Property { Name = "documentUrl", Type = PropertyType.String, IsQueryable = true, IsSearchable = true, IsRetrievable = true, IsRefinable = false, Labels = new List<Label?>(){ Label.Url} },
-                new Property { Name = "content", Type = PropertyType.String, IsQueryable = false, IsSearchable = true, IsRetrievable = true, IsRefinable = false, AdditionalData = new Dictionary<string,Object> {{ "IsContent", true }} }
+              // new Property { Name = "documentContent", Type = PropertyType.String, IsQueryable = false, IsSearchable = true, IsRetrievable = true, IsRefinable = false , AdditionalData = new Dictionary<string,Object> {{ "isContent", true }} }
             },
         };
-
         if (isUpdate)
         {
             await GraphHelper.RegisterSchemaAsync(currentConnection.Id, schema, true);
@@ -322,20 +320,28 @@ async Task RegisterSchemaAsync(bool isUpdate = false)
             Console.WriteLine("Schema registered successfully");
         }
     }
-    catch (ServiceException serviceException)
-    {
-        Console.WriteLine($"Error registering schema: {serviceException.ResponseStatusCode} {serviceException.Message}");
-        Log.Error(serviceException, serviceException.Message);
-        Log.Error(serviceException, serviceException.ToString());
-        throw new Exception($"Failed to retrieve token:{serviceException.ResponseStatusCode}: {serviceException.Message}");
-    }
     catch (ODataError odataError)
     {
         Console.WriteLine($"Error registering schema: {odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
         Log.Error(odataError, odataError.Message);
         Log.Error(odataError, odataError.ToString());
-        throw new Exception($"Failed to retrieve token:{odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
+        if (odataError.InnerException != null)
+        {
+            Log.Error(odataError, odataError.InnerException.Message);
+        }
+        throw new Exception($"registering schema:{odataError.ResponseStatusCode}: {odataError.Error?.Code} {odataError.Error?.Message}");
     }
+    catch (ServiceException serviceException)
+    {
+        Console.WriteLine($"Error registering schema: {serviceException.ResponseStatusCode} {serviceException.Message}");
+        Log.Error(serviceException, serviceException.Message);
+        if (serviceException.InnerException != null)
+        {
+            Log.Error(serviceException, serviceException.InnerException.Message);
+        }
+        throw new Exception($"Failed to registering schema:{serviceException.ResponseStatusCode}: {serviceException.Message}");
+    }
+    
 }
 
 async Task GetSchemaAsync()
@@ -415,8 +421,8 @@ async Task UpdateItemsFromDatabaseAsync(bool uploadModifiedOnly, string? tenantI
             Id = document.DocumentId.ToString(),
             Content = new ExternalItemContent
             {
-                Type = ExternalItemContentType.Text,
-                Value = document.LatestTitle
+                Type = ExternalItemContentType.Html,
+                Value = document.FullContentHtml
             },
             Acl = new List<Acl>
             {
@@ -427,7 +433,7 @@ async Task UpdateItemsFromDatabaseAsync(bool uploadModifiedOnly, string? tenantI
                     Value = tenantId,
                 }
             },
-            Properties = document.AsExternalItemProperties(),
+            Properties = document.AsExternalItemProperties(),     
         };
         newItem.Properties.AdditionalData.Remove("id");
         //var json = JsonSerializer.Serialize(newItem);
