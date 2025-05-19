@@ -90,6 +90,10 @@ try
                     var documents = await ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings);
                     string jsonString = JsonSerializer.Serialize(documents, new JsonSerializerOptions { WriteIndented = true });
                     Console.WriteLine(jsonString);
+                    if (documents.Count > 0)
+                        Console.WriteLine(Convert.ToString(documents[0].FullContentHtml));
+                    if (documents.Count > 1)
+                        Console.WriteLine(Convert.ToString(documents[1].FullContentHtml));
                     break;
                 case 10:
                     using (var db = new ClausematchDbContext())

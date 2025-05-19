@@ -80,7 +80,9 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient.Services
                     documents.AddRange(data.Documents);
                     foreach (var doc in documents)
                     {
+#pragma warning disable CS8604 // Possible null reference argument.
                         doc.Categories = string.Join(", ", doc.LatestCategories.Select(c => c.CategoryName));
+#pragma warning restore CS8604 // Possible null reference argument.
                         doc.DocumentUrl = settings.ClausematchDocumentUrl + doc.DocumentId;
 
                         DocumentContent content = await GetDocumentContentByIdAsync(jwtToken, doc.DocumentId, doc.LatestVersion, settings);
