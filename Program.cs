@@ -43,6 +43,7 @@ try
             Console.WriteLine("8. Push ALL items to current connection");
             Console.WriteLine("9. Verify Clausematch API Connectivity");
             Console.WriteLine("10. Delete all items in current connection");
+            Console.WriteLine("11. Push Data to dataverse.");
             Console.Write("Selection: ");
 
             try
@@ -102,6 +103,17 @@ try
                         Console.WriteLine("All documents marked as deleted in local DB.");
                     }
                     await DeleteAllDeletedItemsFromDatabaseAsync(settings.TenantId);
+                    break;
+                case 11:
+                    var documentsList = await ApiClientOrchestrator.GetClauseMatchDocumentsAsync(settings);
+                    string jsonStr = JsonSerializer.Serialize(documentsList, new JsonSerializerOptions { WriteIndented = true });
+                    Console.WriteLine(jsonStr);
+                    if (documentsList.Count > 0)
+                        Console.WriteLine(Convert.ToString(documentsList[0].FullContentHtml));
+                    if (documentsList.Count > 1)
+                        Console.WriteLine(Convert.ToString(documentsList[1].FullContentHtml));
+                    Console.WriteLine("Loading documents in dataverse");
+                    await ApiClientOrchestrator.SendDocumentsToApiAsync(documentsList, settings.PowerAutomateAPIUrl, settings.PowerAutomateAPIKey);
                     break;
 
                 default:

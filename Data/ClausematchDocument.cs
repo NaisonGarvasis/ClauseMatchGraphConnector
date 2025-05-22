@@ -31,6 +31,7 @@ public class ClausematchDocument
     [JsonPropertyName("latestCategories"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IList<LatestCategory>? LatestCategories { get; set; }
     public string? Categories { get; set; }
+    [JsonPropertyName("documentUrl"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? DocumentUrl { get; set; }
     [NotMapped]
     public string? HeaderContent { get; set; }
@@ -39,6 +40,7 @@ public class ClausematchDocument
     [NotMapped]
     public string? BodyContent { get; set; }
     [NotMapped]
+    [JsonPropertyName("fullContentHtml"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? FullContentHtml
     {
         get

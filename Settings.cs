@@ -14,7 +14,8 @@ public class Settings
     public string? IsAdminUser { get; set; }
     public string? DefaultClausematchGraphConnectionId { get; set; }
     public List<string> Categories { get; set; } = new();
-
+    public string? PowerAutomateAPIUrl { get; set; }
+    public string? PowerAutomateAPIKey { get; set; }
 
     public static Settings LoadSettings()
     {

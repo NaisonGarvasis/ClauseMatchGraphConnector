@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -61,6 +62,45 @@ namespace ClauseMatchGraphConnector.ClausematchApiClient
             }
             return distinctDocumentsList;
         }
+
+        public async static Task SendDocumentsToApiAsync(IList<ClausematchDocument> documents, string apiUrl, string apiKey)
+        {
+            using var host = Host.CreateDefaultBuilder()
+                .ConfigureServices((context, services) =>
+                {
+                    services.AddHttpClient();
+                })
+                .Build();
+
+            var httpClientFactory = host.Services.GetRequiredService<IHttpClientFactory>();
+            var client = httpClientFactory.CreateClient();
+
+            try
+            {
+                Console.WriteLine("Sending documents to external API...");
+
+                // Add the API key to the headers
+                client.DefaultRequestHeaders.Add("ApiKey", apiKey);
+
+                var response = await client.PostAsJsonAsync(apiUrl, documents);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Documents sent successfully.");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.Error.WriteLine($"Failed to send documents. Status Code: {response.StatusCode}, Error: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error while sending documents: {ex.Message}");
+                throw new Exception($"Error sending documents to API: {ex.Message}", ex);
+            }
+        }
+
 
     }
 }
