@@ -40,54 +40,67 @@ internal class ChatConsoleService(CopilotClient copilotClient) : IHostedService
         sw.Stop();
     }
 
-    private async Task PrintActivityAsync(IActivity act, CancellationToken cancellationToken)
+private async Task PrintActivityAsync(IActivity act, CancellationToken cancellationToken)
+{
+    switch (act.Type)
     {
-        switch (act.Type)
-        {
-            case "message":
-                Console.WriteLine("\n" + act.Text);
+        case "message":
+            Console.WriteLine("\n" + act.Text);
 
-                if (act.SuggestedActions?.Actions?.Count > 0)
-                {
-                    Console.WriteLine("Suggested actions:\n");
-                    foreach (var action in act.SuggestedActions.Actions)
-                        Console.WriteLine($"\t{action.Text}");
-                }
+            if (act.SuggestedActions?.Actions?.Count > 0)
+            {
+                Console.WriteLine("Suggested actions:\n");
+                foreach (var action in act.SuggestedActions.Actions)
+                    Console.WriteLine($"\t{action.Text}");
+            }
 
-                if (act.Attachments?.Count > 0)
+            if (act.Attachments?.Count > 0)
+            {
+                foreach (var attachment in act.Attachments)
                 {
-                    foreach (var attachment in act.Attachments)
+                    if (attachment.ContentType == "application/vnd.microsoft.card.adaptive")
                     {
-                        if (attachment.ContentType == "application/vnd.microsoft.card.adaptive")
+                        var userInput = HandleAdaptiveCard(attachment.Content);
+                        if (userInput.Count > 0)
                         {
-                            var userInput = HandleAdaptiveCard(attachment.Content);
-                            if (userInput.Count > 0)
+                            Console.WriteLine("\nSending your inputs to the agent...\n");
+
+                            // Construct an Activity with the user's input
+                            var userActivity = new Activity
                             {
-                                Console.WriteLine("\nSending your inputs to the agent...\n");
-                                await foreach (Activity followUp in copilotClient.SubmitResponseAsync(userInput, cancellationToken))
-                                {
-                                    await PrintActivityAsync(followUp, cancellationToken);
-                                }
+                                Type = "message",
+                                Text = JsonSerializer.Serialize(userInput),
+                                From = new ChannelAccount { Id = "user", Name = "User" },
+                                Recipient = new ChannelAccount { Id = "bot", Name = "Bot" },
+                                Conversation = act.Conversation,
+                                ReplyToId = act.Id
+                            };
+
+                            await foreach (var followUp in copilotClient.AskQuestionAsync(userActivity, cancellationToken))
+                            {
+                                await PrintActivityAsync(followUp, cancellationToken);
                             }
                         }
                     }
                 }
+            }
 
-                break;
+            break;
 
-            case "typing":
-                Console.Write(".");
-                break;
+        case "typing":
+            Console.Write(".");
+            break;
 
-            case "event":
-                Console.Write("+");
-                break;
+        case "event":
+            Console.Write("+");
+            break;
 
-            default:
-                Console.Write($"[{act.Type}]");
-                break;
-        }
+        default:
+            Console.Write($"[{act.Type}]");
+            break;
     }
+}
+
 
     private static Dictionary<string, object> HandleAdaptiveCard(object content)
     {
