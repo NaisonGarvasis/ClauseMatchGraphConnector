@@ -1,125 +1,123 @@
-using System;
-using System.Collections.Generic;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
-using Microsoft.SemanticKernel.AI.ChatCompletion;
-using Microsoft.SemanticKernel.Orchestration;
+using CopilotChatClient;
+using Microsoft.Teams.AI.Agents;
+using Microsoft.Teams.AI.Agents.Hosting;
+using Microsoft.Teams.AI.Agents.Model;
 
-namespace CopilotStudioClient
+namespace ChatConsole;
+
+public class ChatConsoleService
 {
-    public class ChatConsoleService
+    private readonly AgentClient _agent;
+
+    public ChatConsoleService(AgentClient agent)
     {
-        private readonly IChatCompletion _agentClient;
+        _agent = agent;
+    }
 
-        public ChatConsoleService(IChatCompletion agentClient)
+    public async Task RunAsync()
+    {
+        Console.WriteLine("Welcome to the Copilot Agent chat. Type 'exit' to quit.");
+
+        while (true)
         {
-            _agentClient = agentClient;
-        }
+            Console.Write("You: ");
+            string input = Console.ReadLine();
+            if (string.Equals(input, "exit", StringComparison.OrdinalIgnoreCase))
+                break;
 
-        public async Task RunAsync()
-        {
-            Console.WriteLine("Starting chat with Copilot Agent. Type 'exit' to quit.");
+            var activityResponse = await _agent.SendMessageAsync(input, CancellationToken.None);
 
-            while (true)
+            while (activityResponse != null)
             {
-                Console.Write("You: ");
-                string userInput = Console.ReadLine();
-                if (string.Equals(userInput, "exit", StringComparison.OrdinalIgnoreCase))
-                    break;
-
-                var userMessage = new ChatMessage(ChatUserRole.User, userInput);
-                var response = await _agentClient.GetChatCompletionsAsync(new ChatRequest(new[] { userMessage }));
-
-                foreach (var activity in response.Choices)
+                foreach (var activity in activityResponse.Activities)
                 {
-                    var content = activity.Message.Content;
-
-                    // Try to detect adaptive card JSON embedded in content (simplified assumption)
-                    if (TryExtractAdaptiveCardJson(content, out string cardJson))
+                    if (activity.Attachments?.Any() == true)
                     {
-                        var inputs = await RenderAndCollectCardInputAsync(cardJson);
-                        var submitResponse = await _agentClient.GetChatCompletionsAsync(
-                            new ChatRequest(new[] { new ChatMessage(ChatUserRole.User, "") }, inputs));
-                        Console.WriteLine("Agent: " + submitResponse.Choices[0].Message.Content);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Agent: " + content);
-                    }
-                }
-            }
-        }
-
-        private bool TryExtractAdaptiveCardJson(string content, out string cardJson)
-        {
-            // Simplified: in real cases, adaptive card JSON might be in attachments or in content directly.
-            // Here, let's assume content itself is the card JSON if it starts with '{' (JSON object).
-            cardJson = null;
-            content = content?.Trim();
-            if (!string.IsNullOrEmpty(content) && content.StartsWith("{") && content.Contains("\"type\":\"AdaptiveCard\""))
-            {
-                cardJson = content;
-                return true;
-            }
-            return false;
-        }
-
-        private async Task<Dictionary<string, object>> RenderAndCollectCardInputAsync(string cardJson)
-        {
-            var inputs = new Dictionary<string, object>();
-            var json = JsonNode.Parse(cardJson);
-            var body = json?["body"]?.AsArray();
-
-            if (body == null)
-            {
-                Console.WriteLine("⚠️ No 'body' section found in the card.");
-                return inputs;
-            }
-
-            foreach (var element in body)
-            {
-                var type = element?["type"]?.ToString();
-                var id = element?["id"]?.ToString();
-                if (string.IsNullOrWhiteSpace(id)) continue;
-
-                switch (type)
-                {
-                    case "Input.ChoiceSet":
-                        Console.WriteLine(element?["placeholder"]?.ToString() ?? "Select an option:");
-                        var choices = element?["choices"]?.AsArray();
-                        if (choices != null)
+                        foreach (var attachment in activity.Attachments)
                         {
-                            var titles = new List<string>();
-                            int i = 1;
-                            foreach (var choice in choices)
+                            if (attachment.ContentType == "application/vnd.microsoft.card.adaptive")
                             {
-                                var title = choice?["title"]?.ToString() ?? "";
-                                var value = choice?["value"]?.ToString() ?? "";
-                                Console.WriteLine($"  {i}. {title}");
-                                titles.Add(value);
-                                i++;
+                                Console.WriteLine("[Adaptive Card detected]");
+                                var responseInputs = await HandleAdaptiveCardInputAsync(attachment.Content);
+                                activityResponse = await _agent.SubmitResponseAsync(responseInputs, CancellationToken.None);
+                                goto ContinueLoop;
                             }
-                            Console.Write("Enter your choice number: ");
-                            var input = Console.ReadLine();
-                            if (int.TryParse(input, out var selectedIndex) && selectedIndex >= 1 && selectedIndex <= titles.Count)
-                                inputs[id] = titles[selectedIndex - 1];
                         }
-                        break;
+                    }
 
-                    case "Input.Text":
-                        Console.Write($"{element?["placeholder"]?.ToString() ?? "Enter text"}: ");
-                        inputs[id] = Console.ReadLine();
-                        break;
-
-                    case "Input.Toggle":
-                        Console.Write($"{element?["title"]?.ToString() ?? "Yes/No"} (yes/no): ");
-                        var toggleInput = Console.ReadLine();
-                        inputs[id] = toggleInput?.ToLower() == "yes" ? "true" : "false";
-                        break;
+                    if (!string.IsNullOrWhiteSpace(activity.Text))
+                    {
+                        Console.WriteLine($"Agent: {activity.Text}");
+                    }
                 }
-            }
 
+                activityResponse = null;
+
+            ContinueLoop:
+                continue;
+            }
+        }
+    }
+
+    private async Task<IDictionary<string, object>> HandleAdaptiveCardInputAsync(object content)
+    {
+        var inputs = new Dictionary<string, object>();
+        var card = content as JsonObject ?? JsonNode.Parse(content?.ToString()) as JsonObject;
+
+        if (card?["body"] is not JsonArray body)
+        {
+            Console.WriteLine("⚠️ No body found in Adaptive Card.");
             return inputs;
         }
+
+        foreach (var item in body)
+        {
+            var type = item?["type"]?.ToString();
+            var id = item?["id"]?.ToString();
+
+            if (string.IsNullOrEmpty(id)) continue;
+
+            switch (type)
+            {
+                case "Input.Text":
+                    Console.Write($"{item?["placeholder"] ?? "Enter text"}: ");
+                    inputs[id] = Console.ReadLine();
+                    break;
+
+                case "Input.ChoiceSet":
+                    Console.WriteLine(item?["placeholder"]?.ToString() ?? "Choose an option:");
+                    var choices = item?["choices"]?.AsArray();
+                    if (choices != null)
+                    {
+                        var options = choices.Select(c => new
+                        {
+                            Title = c?["title"]?.ToString(),
+                            Value = c?["value"]?.ToString()
+                        }).ToList();
+
+                        for (int i = 0; i < options.Count; i++)
+                        {
+                            Console.WriteLine($"  {i + 1}. {options[i].Title}");
+                        }
+
+                        Console.Write("Select number: ");
+                        if (int.TryParse(Console.ReadLine(), out int selectedIndex) &&
+                            selectedIndex >= 1 && selectedIndex <= options.Count)
+                        {
+                            inputs[id] = options[selectedIndex - 1].Value;
+                        }
+                    }
+                    break;
+
+                case "Input.Toggle":
+                    Console.Write($"{item?["title"] ?? "Yes/No"} (yes/no): ");
+                    var toggle = Console.ReadLine();
+                    inputs[id] = toggle?.ToLowerInvariant() == "yes" ? "true" : "false";
+                    break;
+            }
+        }
+
+        return inputs;
     }
 }
