@@ -76,10 +76,12 @@ private async Task PrintActivityAsync(IActivity act, CancellationToken cancellat
                                 ReplyToId = act.Id
                             };
 
-                            await foreach (var followUp in copilotClient.AskQuestionAsync(userActivity, cancellationToken))
-                            {
-                                await PrintActivityAsync(followUp, cancellationToken);
-                            }
+var userInputJson = JsonSerializer.Serialize(userInput);
+await foreach (var followUp in copilotClient.AskQuestionAsync(userInputJson, null, cancellationToken))
+{
+    await PrintActivityAsync(followUp, cancellationToken);
+}
+
                         }
                     }
                 }
