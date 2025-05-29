@@ -1,0 +1,125 @@
+using System;
+using System.Collections.Generic;
+using System.Text.Json.Nodes;
+using System.Threading.Tasks;
+using Microsoft.SemanticKernel.AI.ChatCompletion;
+using Microsoft.SemanticKernel.Orchestration;
+
+namespace CopilotStudioClient
+{
+    public class ChatConsoleService
+    {
+        private readonly IChatCompletion _agentClient;
+
+        public ChatConsoleService(IChatCompletion agentClient)
+        {
+            _agentClient = agentClient;
+        }
+
+        public async Task RunAsync()
+        {
+            Console.WriteLine("Starting chat with Copilot Agent. Type 'exit' to quit.");
+
+            while (true)
+            {
+                Console.Write("You: ");
+                string userInput = Console.ReadLine();
+                if (string.Equals(userInput, "exit", StringComparison.OrdinalIgnoreCase))
+                    break;
+
+                var userMessage = new ChatMessage(ChatUserRole.User, userInput);
+                var response = await _agentClient.GetChatCompletionsAsync(new ChatRequest(new[] { userMessage }));
+
+                foreach (var activity in response.Choices)
+                {
+                    var content = activity.Message.Content;
+
+                    // Try to detect adaptive card JSON embedded in content (simplified assumption)
+                    if (TryExtractAdaptiveCardJson(content, out string cardJson))
+                    {
+                        var inputs = await RenderAndCollectCardInputAsync(cardJson);
+                        var submitResponse = await _agentClient.GetChatCompletionsAsync(
+                            new ChatRequest(new[] { new ChatMessage(ChatUserRole.User, "") }, inputs));
+                        Console.WriteLine("Agent: " + submitResponse.Choices[0].Message.Content);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Agent: " + content);
+                    }
+                }
+            }
+        }
+
+        private bool TryExtractAdaptiveCardJson(string content, out string cardJson)
+        {
+            // Simplified: in real cases, adaptive card JSON might be in attachments or in content directly.
+            // Here, let's assume content itself is the card JSON if it starts with '{' (JSON object).
+            cardJson = null;
+            content = content?.Trim();
+            if (!string.IsNullOrEmpty(content) && content.StartsWith("{") && content.Contains("\"type\":\"AdaptiveCard\""))
+            {
+                cardJson = content;
+                return true;
+            }
+            return false;
+        }
+
+        private async Task<Dictionary<string, object>> RenderAndCollectCardInputAsync(string cardJson)
+        {
+            var inputs = new Dictionary<string, object>();
+            var json = JsonNode.Parse(cardJson);
+            var body = json?["body"]?.AsArray();
+
+            if (body == null)
+            {
+                Console.WriteLine("⚠️ No 'body' section found in the card.");
+                return inputs;
+            }
+
+            foreach (var element in body)
+            {
+                var type = element?["type"]?.ToString();
+                var id = element?["id"]?.ToString();
+                if (string.IsNullOrWhiteSpace(id)) continue;
+
+                switch (type)
+                {
+                    case "Input.ChoiceSet":
+                        Console.WriteLine(element?["placeholder"]?.ToString() ?? "Select an option:");
+                        var choices = element?["choices"]?.AsArray();
+                        if (choices != null)
+                        {
+                            var titles = new List<string>();
+                            int i = 1;
+                            foreach (var choice in choices)
+                            {
+                                var title = choice?["title"]?.ToString() ?? "";
+                                var value = choice?["value"]?.ToString() ?? "";
+                                Console.WriteLine($"  {i}. {title}");
+                                titles.Add(value);
+                                i++;
+                            }
+                            Console.Write("Enter your choice number: ");
+                            var input = Console.ReadLine();
+                            if (int.TryParse(input, out var selectedIndex) && selectedIndex >= 1 && selectedIndex <= titles.Count)
+                                inputs[id] = titles[selectedIndex - 1];
+                        }
+                        break;
+
+                    case "Input.Text":
+                        Console.Write($"{element?["placeholder"]?.ToString() ?? "Enter text"}: ");
+                        inputs[id] = Console.ReadLine();
+                        break;
+
+                    case "Input.Toggle":
+                        Console.Write($"{element?["title"]?.ToString() ?? "Yes/No"} (yes/no): ");
+                        var toggleInput = Console.ReadLine();
+                        inputs[id] = toggleInput?.ToLower() == "yes" ? "true" : "false";
+                        break;
+                }
+            }
+
+            return inputs;
+        }
+    }
+}
